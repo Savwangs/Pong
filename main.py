@@ -33,13 +33,26 @@ def get_openai_response(prompt):
 
 # Streamlit app
 st.title("OpenAI GPT-4o-mini Chatbot")
+st.write("Interact with the GPT-4 chatbot by entering your prompt below.")
+
+
+if "conversation" not in st.session_state:
+    st.session_state.conversation = []
 
 user_input = st.text_input("Enter your prompt:")
 
 if st.button("Get Response"):
     if user_input:
         response = get_openai_response(user_input)
-        st.write("OpenAI Response:", response)
+        st.session_state.conversation.append(("user", user_input))
+        st.session_state.conversation.append(("bot", response))
     else:
         st.write("Please enter a prompt.")
 
+for role, msg in st.session_state.conversation:
+    if role == "user":
+        st.write(f"**You:** {msg}")
+    else:
+        st.write(f"**Bot:** {msg}")
+
+        

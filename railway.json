@@ -1,9 +1,16 @@
 {
-  "$schema": "https://railway.app/railway.schema.json",
-  "build": {
-      "builder": "NIXPACKS"
+  "builds": [
+    {
+      "src": "src/frontend.py",
+      "use": "@railway/python"
+    }
+  ],
+  "deployments": {
+    "startCommand": "streamlit run src/frontend.py"
   },
-  "deploy": {
-      "startCommand": "streamlit run app.py --server.address 0.0.0.0 --server.port $PORT --server.fileWatcherType none --browser.gatherUsageStats false --client.toolbarMode minimal"
+  "envs": {
+    "OPENAPI_API_KEY": "OPENAPI_API_KEY"
   }
 }
+
+

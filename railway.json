@@ -1,20 +1,9 @@
 {
-  "builds": [
-    {
-      "src": "src/frontend.py",
-      "use": "@railway/streamlit",
-      "config": {
-        "port": 8080
-      }
-    }
-  ],
-  "deployments": {
-    "env": {
-      "OPENAI_API_KEY": {
-        "type": "secret",
-        "description": "Your OpenAI API key"
-      }
-    }
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+      "builder": "NIXPACKS"
+  },
+  "deploy": {
+      "startCommand": "streamlit run app.py --server.address 0.0.0.0 --server.port $PORT --server.fileWatcherType none --browser.gatherUsageStats false --client.toolbarMode minimal"
   }
 }
-

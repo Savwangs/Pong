@@ -16,7 +16,9 @@ llm = LLM(api_key=OPENAI_API_KEY)
 frontend = Frontend(memory=memory, llm=llm)
 
 # Run the frontend to start the chatbot
-frontend.run()
+if __name__ == "__main__":
+    frontend.run()
+
 
 
         

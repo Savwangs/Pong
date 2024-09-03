@@ -1,16 +1,12 @@
 {
-  "builds": [
-    {
-      "src": "src/frontend.py",
-      "use": "@railway/python"
-    }
-  ],
-  "deployments": {
-    "startCommand": "streamlit run src/frontend.py"
+  "build": {
+    "builder": "NIXPACKS"
   },
+  "start": "streamlit run main.py",
   "envs": {
-    "OPENAPI_API_KEY": "OPENAPI_API_KEY"
+    "OPENAI_API_KEY": "$OPENAI_API_KEY"
   }
 }
+
 
 

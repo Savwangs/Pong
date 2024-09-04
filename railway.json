@@ -1,12 +1,17 @@
 {
   "build": {
-    "builder": "NIXPACKS"
+    "builder": "Nixpacks"
   },
-  "start": "streamlit run main.py",
+  "deploy": {
+    "startCommand": "streamlit run main.py --server.port $PORT --server.address 0.0.0.0"
+  },
   "envs": {
-    "OPENAI_API_KEY": "$OPENAI_API_KEY"
+    "OPENAI_API_KEY": {
+      "required": true
+    }
   }
 }
+
 
 
 

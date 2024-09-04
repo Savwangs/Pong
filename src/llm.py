@@ -12,13 +12,9 @@ class LLM:
         for role, content in conversation:
             messages.append({"role": role, "content": content})
 
-        try:
-            completion = self.client.chat.completions.create(
-            model=self.model,
-            messages=messages
-            )
-            return completion.choices[0].message.content
-        except APIConnectionError as e:
-            logging.error(f"API Connection Error: {e}")
-            st.error("Failed to connect to OpenAI API. Please try again later.")
-            return "Error connecting to the OpenAI API."
+        
+        completion = self.client.chat.completions.create(
+        model=self.model,
+        messages=messages
+        )
+        return completion.choices[0].message.content

@@ -5,16 +5,19 @@ class LLM:
         self.client = OpenAI(api_key=api_key)
         self.model = model
 
-    def get_response(self, conversation):
-        """Get a response from OpenAI based on the conversation history."""
+    def get_response(self, conversation, user_message):
+        """Get a response from OpenAI based on the conversation history and user's new message."""
         messages = [{"role": "system", "content": "You are a helpful assistant."}]
         
         for role, content in conversation:
             messages.append({"role": role, "content": content})
+        
+        messages.append({"role": "user", "content": user_message})
 
         
         completion = self.client.chat.completions.create(
-        model=self.model,
-        messages=messages
+            model=self.model,
+            messages=messages
         )
+        
         return completion.choices[0].message.content

@@ -1,8 +1,8 @@
 import json
 import os
 from twilio.rest import Client
-from llm import LLM
-from memory import Memory
+from src.llm import LLM
+from src.memory import Memory
 
 class Backend:
     def __init__(self):

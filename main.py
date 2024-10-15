@@ -1,4 +1,4 @@
-from frontend import Frontend
+from src.frontend import Frontend
 
 def main():
     frontend = Frontend()

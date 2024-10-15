@@ -34,9 +34,7 @@ class Memory:
                 data = json.load(f)
             return data.get(name, [])
         except FileNotFoundError:
-          
-
-  return []
+            return []
         except Exception as e:
             print(f"Error in loading interactions: {e}")
             return []

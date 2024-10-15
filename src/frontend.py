@@ -1,5 +1,5 @@
 import streamlit as st
-from backend import Backend
+from src.backend import Backend
 
 class Frontend:
     def __init__(self):

@@ -1,4 +1,4 @@
-# Project1
+# Pong
 
 ### Setup
 ```bash

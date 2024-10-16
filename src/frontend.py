@@ -6,18 +6,23 @@ class Frontend:
         self.backend = Backend()
 
     def run(self):
-        st.title("Savir Chatbot")
+        st.title("Savir's Chatbot")
+
+        # Initialize session state
+        if "user_name" not in st.session_state:
+            st.session_state.user_name = ""
+        if "conversation" not in st.session_state:
+            st.session_state.conversation = []
 
         # Ask for user's name if not already provided
-        if "user_name" not in st.session_state:
-            st.session_state.user_name = st.text_input("Please enter your name:")
+        if not st.session_state.user_name:
+            user_name = st.text_input("Please enter your name:")
+            if st.button("Submit Name"):
+                st.session_state.user_name = user_name
+                st.experimental_rerun()
 
         if st.session_state.user_name:
             st.write(f"Hello, {st.session_state.user_name}!")
-
-            # Initialize conversation history
-            if "conversation" not in st.session_state:
-                st.session_state.conversation = []
 
             # Text input for user message
             user_message = st.text_input("Enter your message:")

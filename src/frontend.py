@@ -19,7 +19,7 @@ class Frontend:
             user_name = st.text_input("Please enter your name:")
             if st.button("Submit Name"):
                 st.session_state.user_name = user_name
-                st.experimental_rerun()
+                st.rerun()  # Changed from st.experimental_rerun()
 
         if st.session_state.user_name:
             st.write(f"Hello, {st.session_state.user_name}!")

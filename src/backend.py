@@ -1,8 +1,9 @@
-import json
-import os
 from twilio.rest import Client
 from src.llm import LLM
 from src.memory import Memory
+import json
+import os
+import random
 
 class Backend:
     def __init__(self):
@@ -19,43 +20,46 @@ class Backend:
         except FileNotFoundError:
             return {}
 
-    def find_messages_for_name(self, name):
+    def get_messages_for_name(self, name):
         phone_number = self.name_to_phone.get(name)
         if not phone_number:
-            return {"Savir": [], "User": []}
+            return None
 
-        # Fetch messages from Twilio
-        messages = self.twilio_client.messages.list(to=self.twilio_number, from_=phone_number)
-        conversation = {"Savir": [], "User": []}
-        
-        for message in messages[:15]:  # Limit to last 15 messages
-            if message.direction == 'inbound':
-                conversation["User"].append(message.body)
-            else:
-                conversation["Savir"].append(message.body)
+        messages = self.twilio_client.messages.list(
+            to=self.twilio_number, 
+            from_=phone_number
+        ) + self.twilio_client.messages.list(
+            from_=self.twilio_number, 
+            to=phone_number
+        )
 
-        # Save to conversation_history.json
-        with open('conversation_history.json', 'w') as f:
-            json.dump(conversation, f)
+        messages.sort(key=lambda m: m.date_sent)
+
+        conversation = [
+            {
+                "direction": "inbound" if m.from_ == phone_number else "outbound",
+                "content": m.body,
+                "date": m.date_sent
+            } for m in messages
+        ]
 
         return conversation
 
-    def get_most_relevant_given_text(self, name, user_text):
-        # Load conversation history
-        conversation = self.find_messages_for_name(name)
+    def get_response(self, name, user_text):
+        if name not in self.name_to_phone:
+            return f"No contact named {name} found."
 
-        # Prepare context for LLM
-        context = f"Previous conversation with {name}:\n"
-        for i in range(min(len(conversation['Savir']), len(conversation['User']))):
-            context += f"{name}: {conversation['User'][i]}\n"
-            context += f"Savir: {conversation['Savir'][i]}\n"
+        conversation = self.get_messages_for_name(name)
         
-        context += f"\n{name}: {user_text}\nSavir:"
+        if not conversation:
+            return f"No message history found for {name}."
 
-        # Get response from LLM
+        sample_messages = random.sample(conversation, min(15, len(conversation)))
+        sample_messages.sort(key=lambda m: m['date'])
+
+        context = self.memory.prepare_context(name, self.twilio_number, sample_messages, user_text)
         response = self.llm.get_response(context)
 
-        # Save the new interaction
         self.memory.save_interaction(name, user_text, response)
 
         return response

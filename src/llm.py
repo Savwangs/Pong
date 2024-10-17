@@ -1,6 +1,3 @@
-import os
-from openai import OpenAI
-
 class LLM:
     def __init__(self):
         self.client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
@@ -10,7 +7,7 @@ class LLM:
             response = self.client.chat.completions.create(
                 model="gpt-3.5-turbo",  # or another appropriate model
                 messages=[
-                    {"role": "system", "content": "You are a helpful assistant named Savir."},
+                    {"role": "system", "content": "You are a helpful assistant named Savir, responding based on actual phone message history."},
                     {"role": "user", "content": context}
                 ],
                 max_tokens=150,

@@ -19,7 +19,7 @@ class Frontend:
             user_name = st.text_input("Please enter your name:")
             if st.button("Submit Name"):
                 st.session_state.user_name = user_name
-                st.rerun()  # Changed from st.experimental_rerun()
+                st.rerun()
 
         if st.session_state.user_name:
             st.write(f"Hello, {st.session_state.user_name}!")
@@ -28,8 +28,8 @@ class Frontend:
             user_message = st.text_input("Enter your message:")
 
             if st.button("Send") and user_message:
-                # Get response from backend
-                response = self.backend.get_most_relevant_given_text(st.session_state.user_name, user_message)
+                # Get response from backend using the new get_response method
+                response = self.backend.get_response(st.session_state.user_name, user_message)
 
                 # Display the response
                 st.write(f"Savir: {response}")

@@ -1,6 +1,6 @@
 from twilio.rest import Client
-from llm import LLM
-from memory import Memory
+from src.llm import LLM
+from src.memory import Memory
 import json
 import os
 import random

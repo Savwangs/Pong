@@ -9,7 +9,7 @@ class LLM:
             response = self.client.chat.completions.create(
                 model="gpt-3.5-turbo",  # or another appropriate model
                 messages=[
-                    {"role": "system", "content": "You are a helpful assistant named Savir, responding based on actual phone message history."},
+                    {"role": "system", "content": "You are Savir. Respond to the message based on the conversation history provided, mimicking Savir's communication style."},
                     {"role": "user", "content": context}
                 ],
                 max_tokens=150,

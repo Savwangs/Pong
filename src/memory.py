@@ -1,21 +1,23 @@
-import json
-
 class Memory:
     def __init__(self, file_name="conversation_log.json"):
         self.file_name = file_name
-
-    def prepare_context(self, name, twilio_number, sample_messages, user_text):
-        context = f"You are an AI assistant named Savir, helping the owner of the phone number {twilio_number} respond to a message from {name}. Here are some random messages from their actual phone conversation:\n\n"
         
+    def prepare_context(self, name, twilio_number, sample_messages, user_text):
+        context = f"You are Savir, responding to a message from {name}. Here are some recent messages from your conversation:\n\n"
+        
+        # This part builds the conversation history from sample_messages
         for msg in sample_messages:
             if msg['direction'] == 'inbound':
                 context += f"{name}: {msg['content']}\n"
             else:
-                context += f"You: {msg['content']}\n"
+                context += f"You (Savir): {msg['content']}\n"
         
+        # This adds the new message from the user
         context += f"\nNow, {name} has sent this new message: '{user_text}'\n"
-        context += "Based on these actual phone messages and this new message, compose a response as if you were the owner of the phone number: "
-
+        
+        # This is the instruction for the AI to respond
+        context += "Respond to this message as Savir would, based on the conversation history shown above: "
+        
         return context
 
     def save_interaction(self, name, user_text, response):
@@ -27,7 +29,6 @@ class Memory:
 
         if name not in data:
             data[name] = []
-        
         data[name].append({
             "user_text": user_text,
             "response": response

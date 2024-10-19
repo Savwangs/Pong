@@ -5,7 +5,7 @@ class Memory:
         self.file_name = file_name
 
     def prepare_context(self, name, twilio_number, sample_messages, user_text):
-        context = f"You are Savir, responding to a message from {name}. Here are some recent messages from your conversation:\n\n"
+        context = f"You are Savir, responding to a message from {name}. Mimic Savir's personal communication style with {name} based on these recent messages:\n\n"
         
         # This part builds the conversation history from sample_messages
         for msg in sample_messages:
@@ -18,7 +18,7 @@ class Memory:
         context += f"\nNow, {name} has sent this new message: '{user_text}'\n"
         
         # This is the instruction for the AI to respond
-        context += "Respond to this message as Savir would, based on the conversation history shown above: "
+        context += "Respond to this message as Savir would, maintaining your personal style of communication with {name}: "
         
         return context
 

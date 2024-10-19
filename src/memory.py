@@ -1,7 +1,9 @@
+import json
+
 class Memory:
     def __init__(self, file_name="conversation_log.json"):
         self.file_name = file_name
-        
+
     def prepare_context(self, name, twilio_number, sample_messages, user_text):
         context = f"You are Savir, responding to a message from {name}. Here are some recent messages from your conversation:\n\n"
         

@@ -1,8 +1,10 @@
 import os
 from openai import OpenAI
+from dotenv import load_dotenv
 
 class LLM:
     def __init__(self):
+        load_dotenv()
         self.client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
 
     def get_response(self, context):

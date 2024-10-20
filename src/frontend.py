@@ -6,7 +6,7 @@ class Frontend:
         self.backend = Backend()
 
     def run(self):
-        st.title("Savir's Chatbot")
+        st.title("Personalized Chatbot")
 
         # Initialize session state
         if "user_name" not in st.session_state:

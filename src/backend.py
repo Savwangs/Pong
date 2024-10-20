@@ -9,6 +9,7 @@ class Backend:
         self.memory = Memory()
         self.db_connection = sqlite3.connect('messages.db')
         self.db_cursor = self.db_connection.cursor()
+        create_table()
 
     def get_response(self, name, user_text):
         sanitized_name = name.strip().lower()

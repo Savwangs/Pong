@@ -2,6 +2,7 @@ import sqlite3
 import random
 from src.llm import LLM
 from src.memory import Memory
+from import_messages import create_table
 
 class Backend:
     def __init__(self):

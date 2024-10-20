@@ -31,18 +31,21 @@ class Backend:
         query = """
         SELECT sender_name, content, message_date
         FROM messages
-        WHERE (sender_name = ? AND sender_name != 'Savir') OR (sender_name = 'Savir' AND chat_session LIKE ?)
-        ORDER BY message_date DESC
+        WHERE chat_session = ?
+        ORDER BY message_date ASC
         LIMIT 100
         """
-        self.db_cursor.execute(query, (name, f"%{name}%"))
+        # Execute the query where the chat_session is 'Bro'
+        self.db_cursor.execute(query, (name,))
         messages = self.db_cursor.fetchall()
 
+        # Now process the messages
         return [{
-            "direction": "inbound" if m[0] != 'Savir' else "outbound",
-            "content": m[1],
-            "timestamp": m[2]
+            # If the sender_name is empty, it's an outbound message from 'Savir'
+            "direction": "inbound" if m[0] else "outbound",
+            "content": m[1],  # Message content
+            "timestamp": m[2]  # Message timestamp
         } for m in messages]
-
+    
     def __del__(self):
         self.db_connection.close()

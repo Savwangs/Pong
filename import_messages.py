@@ -2,8 +2,26 @@ import sqlite3
 import csv
 from datetime import datetime
 
+def create_table():
+    conn = sqlite3.connect('messages.db')  # Ensure this is the correct path
+    cursor = conn.cursor()
+    
+    # Create the messages table if it doesn't exist
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        sender TEXT NOT NULL,
+        recipient TEXT NOT NULL,
+        content TEXT NOT NULL,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    """)
+    conn.commit()
+    conn.close()
+
 def import_messages(csv_file_path):
-    conn = sqlite3.connect('messages.db')
+    create_table()  # Call the function to create the table
+    conn = sqlite3.connect('messages.db')  # Ensure this is the correct path
     cursor = conn.cursor()
 
     with open(csv_file_path, 'r', encoding='utf-8') as file:

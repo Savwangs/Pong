@@ -29,19 +29,19 @@ class Backend:
 
     def get_messages_for_name(self, name):
         query = """
-        SELECT sender, recipient, content, timestamp
+        SELECT sender_name, content, message_date
         FROM messages
-        WHERE (sender = ? AND recipient = 'Savir') OR (sender = 'Savir' AND recipient = ?)
-        ORDER BY timestamp DESC
+        WHERE (sender_name = ? AND sender_name != 'Savir') OR (sender_name = 'Savir' AND chat_session LIKE ?)
+        ORDER BY message_date DESC
         LIMIT 100
         """
-        self.db_cursor.execute(query, (name, name))
+        self.db_cursor.execute(query, (name, f"%{name}%"))
         messages = self.db_cursor.fetchall()
 
         return [{
-            "direction": "inbound" if m[0] == name else "outbound",
-            "content": m[2],
-            "timestamp": m[3]
+            "direction": "inbound" if m[0] != 'Savir' else "outbound",
+            "content": m[1],
+            "timestamp": m[2]
         } for m in messages]
 
     def __del__(self):

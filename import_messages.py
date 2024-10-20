@@ -1,6 +1,7 @@
 import sqlite3
 import csv
 from datetime import datetime
+import os
 
 def create_table():
     conn = sqlite3.connect('messages.db')
@@ -13,6 +14,7 @@ def create_table():
         message_date DATETIME,
         delivered_date DATETIME,
         read_date DATETIME,
+        edited_date DATETIME,
         service TEXT,
         type TEXT,
         sender_id TEXT,
@@ -29,6 +31,10 @@ def import_messages(csv_file_path):
     create_table()
     conn = sqlite3.connect('messages.db')
     cursor = conn.cursor()
+
+    # Use the correct relative path to the CSV file
+    script_dir = os.path.dirname(os.path.abspath(__file__))  # Get the directory of the current script
+    csv_file_path = os.path.join(script_dir, 'messages.csv')  # Join with your CSV filename
 
     with open(csv_file_path, 'r', encoding='utf-8') as file:
         csv_reader = csv.DictReader(file)
@@ -53,5 +59,5 @@ def import_messages(csv_file_path):
     conn.commit()
     conn.close()
 
-# Replace with the actual path to your exported CSV file
-import_messages('/Users/savirwangoo/Documents/Introduction/messages.csv')
+# Call import_messages only if you want to import data initially
+import_messages('messages.csv')  # You can call this outside of the function if you have the CSV file

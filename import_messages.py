@@ -41,4 +41,4 @@ def import_messages(csv_file_path):
     conn.close()
 
 # Replace with the actual path to your exported CSV file
-import_messages('/Users/savirwangoo/Documents/Introduction/Messages/Messages - 25 chat sessions.csv') 
+import_messages('/Users/savirwangoo/Documents/Introduction/Messages - 25 chat sessions.csv') 

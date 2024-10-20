@@ -59,5 +59,5 @@ def import_messages(csv_file_path):
     conn.commit()
     conn.close()
 
-# Call import_messages only if you want to import data initially
-import_messages('messages.csv')  # You can call this outside of the function if you have the CSV file
+
+import_messages('messages.csv')

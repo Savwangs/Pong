@@ -20,17 +20,18 @@ def create_table():
     conn.close()
 
 def import_messages(csv_file_path):
-    create_table()  # Call the function to create the table
+    create_table()  # Ensure the table is created before importing
     conn = sqlite3.connect('messages.db')  # Ensure this is the correct path
     cursor = conn.cursor()
 
     with open(csv_file_path, 'r', encoding='utf-8') as file:
         csv_reader = csv.DictReader(file)
+
         for row in csv_reader:
-            sender = row['From']
-            recipient = row['To']
-            content = row['Text']
-            timestamp = datetime.strptime(row['Date'], '%Y-%m-%d %H:%M:%S')
+            sender = row['Sender Name']  # Changed to match your CSV structure
+            recipient = row['To'] if 'To' in row else ''  # Check if 'To' exists
+            content = row['Text']  # Match the content field
+            timestamp = datetime.strptime(row['Message Date'], '%Y-%m-%d %H:%M:%S')  # Updated to match the date field
             
             cursor.execute("""
             INSERT INTO messages (sender, recipient, content, timestamp)
@@ -40,4 +41,5 @@ def import_messages(csv_file_path):
     conn.commit()
     conn.close()
 
-import_messages('/Users/savirwangoo/Documents/Introduction/Messages - 25 chat sessions.csv') 
+# Replace with the actual path to your exported CSV file
+import_messages('/Users/savirwangoo/Documents/Introduction/Messages - 25 chat sessions.csv')

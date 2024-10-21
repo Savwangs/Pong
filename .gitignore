@@ -1,0 +1,6 @@
+messages.csv
+messages.db
+conversation_log.json
+.env
+__pycache__/
+*.pyc

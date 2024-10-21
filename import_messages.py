@@ -20,7 +20,11 @@ def create_table():
         sender_id TEXT,
         sender_name TEXT,
         status TEXT,
+        replying_to TEXT,
+        subject TEXT,
         content TEXT,
+        attachment TEXT,
+        attachment_type TEXT,
         timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
     );
     """)
@@ -28,36 +32,51 @@ def create_table():
     conn.close()
 
 def import_messages(csv_file_path):
+    if not os.path.exists(csv_file_path):
+        print(f"Warning: CSV file not found at {csv_file_path}")
+        return
+
     create_table()
     conn = sqlite3.connect('messages.db')
     cursor = conn.cursor()
 
-    # Use the correct relative path to the CSV file
-    script_dir = os.path.dirname(os.path.abspath(__file__))  # Get the directory of the current script
-    csv_file_path = os.path.join(script_dir, 'messages.csv')  # Join with your CSV filename
+    try:
+        with open(csv_file_path, 'r', encoding='utf-8') as file:
+            csv_reader = csv.DictReader(file)
 
-    with open(csv_file_path, 'r', encoding='utf-8') as file:
-        csv_reader = csv.DictReader(file)
+            for row in csv_reader:
+                chat_session = row['Chat Session']
+                message_date = datetime.strptime(row['Message Date'], '%Y-%m-%d %H:%M:%S')
+                delivered_date = datetime.strptime(row['Delivered Date'], '%Y-%m-%d %H:%M:%S') if row['Delivered Date'] else None
+                read_date = datetime.strptime(row['Read Date'], '%Y-%m-%d %H:%M:%S') if row['Read Date'] else None
+                edited_date = None  # As mentioned, this field is empty
+                service = row['Service']
+                type = row['Type']
+                sender_id = row['Sender ID']
+                sender_name = row['Sender Name'] if row['Sender Name'] else 'Savir'  # If empty, it's Savir
+                status = row['Status']
+                replying_to = row['Replying To']
+                subject = row['Subject']
+                content = row['Text']
+                attachment = row['Attachment']
+                attachment_type = row['Attachment Type']
 
-        for row in csv_reader:
-            chat_session = row['Chat Session']
-            message_date = datetime.strptime(row['Message Date'], '%Y-%m-%d %H:%M:%S')
-            delivered_date = datetime.strptime(row['Delivered Date'], '%Y-%m-%d %H:%M:%S') if row['Delivered Date'] else None
-            read_date = datetime.strptime(row['Read Date'], '%Y-%m-%d %H:%M:%S') if row['Read Date'] else None
-            service = row['Service']
-            type = row['Type']
-            sender_id = row['Sender ID']
-            sender_name = row['Sender Name']
-            status = row['Status']
-            content = row['Text']
+                cursor.execute("""
+                INSERT INTO messages (chat_session, message_date, delivered_date, read_date, edited_date, 
+                                      service, type, sender_id, sender_name, status, replying_to, subject, 
+                                      content, attachment, attachment_type)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (chat_session, message_date, delivered_date, read_date, edited_date, service, type, 
+                      sender_id, sender_name, status, replying_to, subject, content, attachment, attachment_type))
 
-            cursor.execute("""
-            INSERT INTO messages (chat_session, message_date, delivered_date, read_date, service, type, sender_id, sender_name, status, content)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (chat_session, message_date, delivered_date, read_date, service, type, sender_id, sender_name, status, content))
+        conn.commit()
+        print("Messages imported successfully")
+    except Exception as e:
+        print(f"Error importing messages: {e}")
+    finally:
+        conn.close()
 
-    conn.commit()
-    conn.close()
-
-
-import_messages('messages.csv')
+if __name__ == "__main__":
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    csv_file_path = os.path.join(script_dir, 'messages.csv')
+    import_messages(csv_file_path)

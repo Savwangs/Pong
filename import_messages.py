@@ -31,9 +31,27 @@ def create_table():
     conn.commit()
     conn.close()
 
+def safe_get(row, key, default=None):
+    """Safely get a value from the row with a default if the key doesn't exist"""
+    try:
+        return row[key] if row[key] is not None else default
+    except KeyError:
+        print(f"Warning: Column '{key}' not found in CSV. Using default value.")
+        return default
+
+def parse_date(date_str):
+    """Safely parse a date string, returning None if invalid"""
+    if not date_str:
+        return None
+    try:
+        return datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
+    except ValueError:
+        print(f"Warning: Could not parse date '{date_str}'. Using None.")
+        return None
+
 def import_messages(csv_file_path):
     if not os.path.exists(csv_file_path):
-        print(f"Warning: CSV file not found at {csv_file_path}")
+        print(f"Error: CSV file not found at {csv_file_path}")
         return
 
     create_table()
@@ -41,38 +59,88 @@ def import_messages(csv_file_path):
     cursor = conn.cursor()
 
     try:
-        with open(csv_file_path, 'r', encoding='utf-8') as file:
-            csv_reader = csv.DictReader(file)
-
-            for row in csv_reader:
-                chat_session = row['Chat Session']
-                message_date = datetime.strptime(row['Message Date'], '%Y-%m-%d %H:%M:%S')
-                delivered_date = datetime.strptime(row['Delivered Date'], '%Y-%m-%d %H:%M:%S') if row['Delivered Date'] else None
-                read_date = datetime.strptime(row['Read Date'], '%Y-%m-%d %H:%M:%S') if row['Read Date'] else None
-                edited_date = None  # As mentioned, this field is empty
-                service = row['Service']
-                type = row['Type']
-                sender_id = row['Sender ID']
-                sender_name = row['Sender Name'] if row['Sender Name'] else 'Savir'  # If empty, it's Savir
-                status = row['Status']
-                replying_to = row['Replying To']
-                subject = row['Subject']
-                content = row['Text']
-                attachment = row['Attachment']
-                attachment_type = row['Attachment Type']
-
-                cursor.execute("""
-                INSERT INTO messages (chat_session, message_date, delivered_date, read_date, edited_date, 
-                                      service, type, sender_id, sender_name, status, replying_to, subject, 
-                                      content, attachment, attachment_type)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, (chat_session, message_date, delivered_date, read_date, edited_date, service, type, 
-                      sender_id, sender_name, status, replying_to, subject, content, attachment, attachment_type))
-
+        # First, clear existing messages to avoid duplicates
+        cursor.execute("DELETE FROM messages")
         conn.commit()
-        print("Messages imported successfully")
+        print("Cleared existing messages from database")
+
+        with open(csv_file_path, 'r', encoding='utf-8') as file:
+            # Read the first line to get column names
+            first_line = file.readline().strip()
+            columns = [col.strip() for col in first_line.split(',')]
+            print(f"Found columns: {columns}")
+            
+            # Reset file pointer
+            file.seek(0)
+            csv_reader = csv.DictReader(file)
+            
+            row_count = 0
+            for row in csv_reader:
+                try:
+                    # Get values with safe defaults
+                    chat_session = safe_get(row, 'Chat Session', '').strip()
+                    message_date = parse_date(safe_get(row, 'Message Date'))
+                    delivered_date = parse_date(safe_get(row, 'Delivered Date'))
+                    read_date = parse_date(safe_get(row, 'Read Date'))
+                    service = safe_get(row, 'Service', '')
+                    type_ = safe_get(row, 'Type', '')
+                    sender_id = safe_get(row, 'Sender ID', '').strip()
+                    sender_name = safe_get(row, 'Sender Name', '').strip()
+                    status = safe_get(row, 'Status', '')
+                    replying_to = safe_get(row, 'Replying to', '')  # Note: Changed from 'Replying To'
+                    subject = safe_get(row, 'Subject', '')
+                    content = safe_get(row, 'Text', '')
+                    attachment = safe_get(row, 'Attachment', '')
+                    attachment_type = safe_get(row, 'Attachment Type', '')
+
+                    if not message_date:
+                        print(f"Skipping row {row_count + 1}: Missing message date")
+                        continue
+
+                    cursor.execute("""
+                    INSERT INTO messages (
+                        chat_session, message_date, delivered_date, read_date, edited_date,
+                        service, type, sender_id, sender_name, status, replying_to,
+                        subject, content, attachment, attachment_type
+                    ) VALUES (?, ?, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (
+                        chat_session, message_date, delivered_date, read_date,
+                        service, type_, sender_id, sender_name, status, replying_to,
+                        subject, content, attachment, attachment_type
+                    ))
+                    
+                    row_count += 1
+                    if row_count % 100 == 0:  # Progress update every 100 rows
+                        print(f"Processed {row_count} messages...")
+                
+                except Exception as e:
+                    print(f"Warning: Error processing row {row_count + 1}: {str(e)}")
+                    continue
+
+            conn.commit()
+            
+            # Verify import
+            cursor.execute("SELECT COUNT(*) FROM messages")
+            final_count = cursor.fetchone()[0]
+            print(f"\nImport completed successfully:")
+            print(f"Total messages imported: {final_count}")
+            
+            # Show sample message
+            cursor.execute("""
+                SELECT chat_session, sender_name, content 
+                FROM messages 
+                LIMIT 1
+            """)
+            sample = cursor.fetchone()
+            if sample:
+                print("\nSample message:")
+                print(f"Chat: {sample[0]}")
+                print(f"Sender: {sample[1] or 'Savir'}")
+                print(f"Content: {sample[2][:50]}...")
+
     except Exception as e:
-        print(f"Error importing messages: {e}")
+        print(f"Error during import process: {str(e)}")
+        conn.rollback()
     finally:
         conn.close()
 

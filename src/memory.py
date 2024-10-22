@@ -6,16 +6,22 @@ class Memory:
         self.file_name = file_name
 
     def prepare_context(self, name, sample_messages, user_text):
-        context = f"You are Savir, responding to a message from {name}. Mimic Savir's personal communication style with {name} based on these recent messages:\n\n"
+        context = (
+            f"You are Savir chatting with {name}. Below is your past conversation history "
+            f"showing how you typically communicate with {name}. Use this to respond in "
+            f"your usual style with this person:\n\n"
+        )
         
+        # Add message history
         for msg in sample_messages:
             if msg['direction'] == 'inbound':
                 context += f"{name}: {msg['content']}\n"
             else:
-                context += f"You (Savir): {msg['content']}\n"
+                context += f"You: {msg['content']}\n"
         
-        context += f"\nNow, {name} has sent this new message: '{user_text}'\n"
-        context += f"Respond to this message as Savir would, maintaining your personal style of communication with {name}: "
+        # Add current message
+        context += f"\nNew message from {name}: {user_text}\n"
+        context += "Your response: "
         
         return context
 

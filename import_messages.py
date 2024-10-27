@@ -146,5 +146,15 @@ def import_messages(csv_file_path):
 
 if __name__ == "__main__":
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    csv_file_path = os.path.join(script_dir, 'messages.csv')
-    import_messages(csv_file_path)
+    csv_files = [
+        'messages.csv',
+        'messages1.csv',
+        'messages2.csv',
+        'messages3.csv',
+        'messages4.csv',
+        'messages5.csv'
+    ]
+    for csv_file in csv_files:
+        csv_file_path = os.path.join(script_dir, csv_file)
+        print(f"Importing {csv_file}...")
+        import_messages(csv_file_path)

@@ -147,12 +147,12 @@ def import_messages(csv_file_path):
 if __name__ == "__main__":
     script_dir = os.path.dirname(os.path.abspath(__file__))
     csv_files = [
-        'messages.csv',
-        'messages1.csv',
-        'messages2.csv',
-        'messages3.csv',
-        'messages4.csv',
-        'messages5.csv'
+        'bro_messages.csv',
+        'mom_messages.csv',
+        'dad_messages.csv',
+        'pranav_messages.csv',
+        'adan_messages.csv',
+        'aryan_messages.csv'
     ]
     for csv_file in csv_files:
         csv_file_path = os.path.join(script_dir, csv_file)

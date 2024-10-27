@@ -5,12 +5,12 @@ from import_messages import create_table, import_messages
 def initialize_database():
     create_table()
     csv_files = [
-        'messages.csv',
-        'messages1.csv',
-        'messages2.csv',
-        'messages3.csv',
-        'messages4.csv',
-        'messages5.csv'
+        'bro_messages.csv',
+        'mom_messages.csv',
+        'dad_messages.csv',
+        'pranav_messages.csv',
+        'adan_messages.csv',
+        'aryan_messages.csv'
     ]
     for csv_file in csv_files:
         csv_file_path = os.path.join(os.path.dirname(__file__), csv_file)

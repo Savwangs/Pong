@@ -4,9 +4,11 @@ from datetime import datetime
 import os
 
 def create_table():
+    """Create the messages table if it doesn't exist and clear existing data"""
     conn = sqlite3.connect('messages.db')
     cursor = conn.cursor()
 
+    # Create table if it doesn't exist
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS messages (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -28,8 +30,12 @@ def create_table():
         timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
     );
     """)
+    
+    # Clear existing data
+    cursor.execute("DELETE FROM messages")
     conn.commit()
     conn.close()
+    print("Database initialized and cleared")
 
 def safe_get(row, key, default=None):
     """Safely get a value from the row with a default if the key doesn't exist"""
@@ -50,19 +56,18 @@ def parse_date(date_str):
         return None
 
 def import_messages(csv_file_path):
+    """Import messages from a CSV file into the database"""
     if not os.path.exists(csv_file_path):
         print(f"Error: CSV file not found at {csv_file_path}")
         return
 
-    create_table()
     conn = sqlite3.connect('messages.db')
     cursor = conn.cursor()
 
     try:
-        # First, clear existing messages to avoid duplicates
-        cursor.execute("DELETE FROM messages")
-        conn.commit()
-        print("Cleared existing messages from database")
+        # Extract chat session name from file name
+        chat_session = os.path.basename(csv_file_path).replace('_messages.csv', '')
+        print(f"Importing messages for chat session: {chat_session}")
 
         with open(csv_file_path, 'r', encoding='utf-8') as file:
             # Read the first line to get column names
@@ -78,7 +83,6 @@ def import_messages(csv_file_path):
             for row in csv_reader:
                 try:
                     # Get values with safe defaults
-                    chat_session = safe_get(row, 'Chat Session', '').strip()
                     message_date = parse_date(safe_get(row, 'Message Date'))
                     delivered_date = parse_date(safe_get(row, 'Delivered Date'))
                     read_date = parse_date(safe_get(row, 'Read Date'))
@@ -87,7 +91,7 @@ def import_messages(csv_file_path):
                     sender_id = safe_get(row, 'Sender ID', '').strip()
                     sender_name = safe_get(row, 'Sender Name', '').strip()
                     status = safe_get(row, 'Status', '')
-                    replying_to = safe_get(row, 'Replying to', '')  # Note: Changed from 'Replying To'
+                    replying_to = safe_get(row, 'Replying to', '')
                     subject = safe_get(row, 'Subject', '')
                     content = safe_get(row, 'Text', '')
                     attachment = safe_get(row, 'Attachment', '')
@@ -118,19 +122,15 @@ def import_messages(csv_file_path):
                     continue
 
             conn.commit()
+            print(f"\nSuccessfully imported {row_count} messages for {chat_session}")
             
-            # Verify import
-            cursor.execute("SELECT COUNT(*) FROM messages")
-            final_count = cursor.fetchone()[0]
-            print(f"\nImport completed successfully:")
-            print(f"Total messages imported: {final_count}")
-            
-            # Show sample message
+            # Show sample message for this chat session
             cursor.execute("""
                 SELECT chat_session, sender_name, content 
                 FROM messages 
+                WHERE chat_session = ?
                 LIMIT 1
-            """)
+            """, (chat_session,))
             sample = cursor.fetchone()
             if sample:
                 print("\nSample message:")
@@ -142,9 +142,19 @@ def import_messages(csv_file_path):
         print(f"Error during import process: {str(e)}")
         conn.rollback()
     finally:
+        # Show current status of imported messages
+        try:
+            cursor.execute("SELECT chat_session, COUNT(*) FROM messages GROUP BY chat_session")
+            results = cursor.fetchall()
+            print("\nCurrent database status:")
+            for chat_session, count in results:
+                print(f"{chat_session}: {count} messages")
+        except:
+            pass
         conn.close()
 
 if __name__ == "__main__":
+    # This section only runs if the script is run directly
     script_dir = os.path.dirname(os.path.abspath(__file__))
     csv_files = [
         'bro_messages.csv',
@@ -154,7 +164,9 @@ if __name__ == "__main__":
         'adan_messages.csv',
         'aryan_messages.csv'
     ]
+    
+    create_table()  # Clear and initialize the database
     for csv_file in csv_files:
         csv_file_path = os.path.join(script_dir, csv_file)
-        print(f"Importing {csv_file}...")
+        print(f"\nImporting {csv_file}...")
         import_messages(csv_file_path)

@@ -1,12 +1,19 @@
 import os
+import streamlit as st
 from openai import OpenAI
 from dotenv import load_dotenv
 
 class LLM:
     def __init__(self):
-        api_key = st.secrets["OPENAI_API_KEY"]
+        try:
+            api_key = st.secrets["OPENAI_API_KEY"]
+        except Exception:
+            load_dotenv()
+            api_key = os.getenv('OPENAI_API_KEY')
+            
         if not api_key:
-            raise ValueError("OpenAI API key not found in Streamlit secrets")
+            raise ValueError("OpenAI API key not found in environment variables or Streamlit secrets")
+            
         self.client = OpenAI(api_key=api_key)
 
     def get_response(self, context):

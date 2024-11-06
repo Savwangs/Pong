@@ -4,10 +4,9 @@ from dotenv import load_dotenv
 
 class LLM:
     def __init__(self):
-        load_dotenv()
-        api_key = os.getenv('OPENAI_API_KEY')
+        api_key = st.secrets["OPENAI_API_KEY"]
         if not api_key:
-            raise ValueError("OpenAI API key not found in .env file")
+            raise ValueError("OpenAI API key not found in Streamlit secrets")
         self.client = OpenAI(api_key=api_key)
 
     def get_response(self, context):

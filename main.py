@@ -2,7 +2,7 @@ import os
 import base64
 import streamlit as st
 from src.frontend import Frontend
-from src.import_messages import create_table, import_messages
+from import_messages import create_table, import_messages
 
 def decode_and_save_csv(encoded_content, filename, data_dir):
     """Decode base64 content and save as CSV"""
@@ -18,16 +18,13 @@ def decode_and_save_csv(encoded_content, filename, data_dir):
 
 def initialize_database():
     """Initialize database with messages from CSV files"""
-    # Create data directory
     data_dir = './data'
     os.makedirs(data_dir, exist_ok=True)
     
-    # Initialize database table
     create_table()
     
     @st.cache_resource
     def load_database():
-        # Check if messages exist in database
         import sqlite3
         conn = sqlite3.connect('messages.db')
         cursor = conn.cursor()
@@ -38,7 +35,6 @@ def initialize_database():
         if count == 0:
             print("Database empty, importing messages...")
             
-            # List of expected CSV files and their corresponding secret keys
             csv_mappings = {
                 'bro_messages.csv': 'BRO_MESSAGES',
                 'mom_messages.csv': 'MOM_MESSAGES',
@@ -48,7 +44,6 @@ def initialize_database():
                 'aryan_messages.csv': 'ARYAN_MESSAGES'
             }
             
-            # Process each CSV file
             for filename, secret_key in csv_mappings.items():
                 try:
                     if secret_key in st.secrets:
@@ -56,7 +51,6 @@ def initialize_database():
                         if decode_and_save_csv(st.secrets[secret_key], filename, data_dir):
                             csv_path = os.path.join(data_dir, filename)
                             import_messages(csv_path)
-                            # Clean up the file after import
                             os.remove(csv_path)
                     else:
                         print(f"Warning: No encoded content found for {filename}")

@@ -3,4 +3,4 @@ messages.db
 conversation_log.json
 .env
 __pycache__/
-*.pyc
+*.pycencode_csv.py

@@ -1,31 +1,69 @@
 import os
+import base64
 import streamlit as st
 from src.frontend import Frontend
-from import_messages import create_table, import_messages
+from src.import_messages import create_table, import_messages
+
+def decode_and_save_csv(encoded_content, filename, data_dir):
+    """Decode base64 content and save as CSV"""
+    try:
+        decoded_content = base64.b64decode(encoded_content).decode('utf-8')
+        filepath = os.path.join(data_dir, filename)
+        with open(filepath, 'w', encoding='utf-8') as f:
+            f.write(decoded_content)
+        return True
+    except Exception as e:
+        print(f"Error saving {filename}: {e}")
+        return False
 
 def initialize_database():
-    data_dir = os.path.join(os.path.dirname(__file__), 'data')
+    """Initialize database with messages from CSV files"""
+    # Create data directory
+    data_dir = './data'
     os.makedirs(data_dir, exist_ok=True)
     
+    # Initialize database table
     create_table()
-    csv_files = [
-        'bro_messages.csv',
-        'mom_messages.csv',
-        'dad_messages.csv',
-        'pranav_messages.csv',
-        'adan_messages.csv',
-        'aryan_messages.csv'
-    ]
     
     @st.cache_resource
     def load_database():
-        for csv_file in csv_files:
-            csv_file_path = os.path.join(data_dir, csv_file)
-            if os.path.exists(csv_file_path):
-                print(f"Importing {csv_file}...")
-                import_messages(csv_file_path)
-            else:
-                print(f"Warning: {csv_file} not found. Skipping...")
+        # Check if messages exist in database
+        import sqlite3
+        conn = sqlite3.connect('messages.db')
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM messages")
+        count = cursor.fetchone()[0]
+        conn.close()
+        
+        if count == 0:
+            print("Database empty, importing messages...")
+            
+            # List of expected CSV files and their corresponding secret keys
+            csv_mappings = {
+                'bro_messages.csv': 'BRO_MESSAGES',
+                'mom_messages.csv': 'MOM_MESSAGES',
+                'dad_messages.csv': 'DAD_MESSAGES',
+                'pranav_messages.csv': 'PRANAV_MESSAGES',
+                'adan_messages.csv': 'ADAN_MESSAGES',
+                'aryan_messages.csv': 'ARYAN_MESSAGES'
+            }
+            
+            # Process each CSV file
+            for filename, secret_key in csv_mappings.items():
+                try:
+                    if secret_key in st.secrets:
+                        print(f"Found encoded content for {filename}")
+                        if decode_and_save_csv(st.secrets[secret_key], filename, data_dir):
+                            csv_path = os.path.join(data_dir, filename)
+                            import_messages(csv_path)
+                            # Clean up the file after import
+                            os.remove(csv_path)
+                    else:
+                        print(f"Warning: No encoded content found for {filename}")
+                except Exception as e:
+                    print(f"Error processing {filename}: {e}")
+        else:
+            print(f"Database already contains {count} messages. Skipping import.")
     
     load_database()
 

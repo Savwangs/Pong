@@ -12,32 +12,47 @@ class Backend:
         self.connect_to_database()
 
     def connect_to_database(self):
+        """Establish database connection"""
         try:
-            self.db_connection = sqlite3.connect('messages.db')
+            self.db_connection = sqlite3.connect('messages.db', check_same_thread=False)
             self.db_cursor = self.db_connection.cursor()
+            
+            # Verify database connection and content
+            self.db_cursor.execute("SELECT DISTINCT chat_session FROM messages")
+            available_sessions = self.db_cursor.fetchall()
+            print(f"Available chat sessions: {[session[0] for session in available_sessions]}")
+            
         except sqlite3.Error as e:
             print(f"Database connection error: {e}")
             raise
 
+    def standardize_name(self, name):
+        """Convert input name to standardized format"""
+        lookup_name = name.strip().lower()
+        return self.name_mapping.get(lookup_name, name.strip())
+
     def get_response(self, name, user_text):
-        sanitized_name = name.strip().lower()
-        print(f"Getting response for user: {sanitized_name}")
+        """Generate response based on chat history"""
+        standardized_name = self.standardize_name(name)
+        print(f"Getting response for user: {standardized_name}")
         
-        conversation = self.get_messages_for_name(sanitized_name)
+        # Get conversation history
+        conversation = self.get_messages_for_name(standardized_name)
         print(f"Found {len(conversation)} messages in history")
 
         if not conversation:
-            return f"Sorry, I don't have any message history with {name}. Let's start a new conversation!"
+            return f"Sorry, I don't have any message history with {standardized_name}. Let's start a new conversation!"
 
-        # Get a random sample of messages, but ensure we keep chronological order
+        # Sample messages for context
         sample_size = min(15, len(conversation))
         sample_indices = sorted(random.sample(range(len(conversation)), sample_size))
         sample_messages = [conversation[i] for i in sample_indices]
         sample_messages.sort(key=lambda m: m['timestamp'])
 
-        context = self.memory.prepare_context(name, sample_messages, user_text)
+        # Generate and return response
+        context = self.memory.prepare_context(standardized_name, sample_messages, user_text)
         response = self.llm.get_response(context)
-        self.memory.save_interaction(name, user_text, response)
+        self.memory.save_interaction(standardized_name, user_text, response)
         return response
 
     def get_messages_for_name(self, name):
@@ -72,5 +87,9 @@ class Backend:
             return []
 
     def __del__(self):
+        """Clean up database connection"""
         if self.db_connection:
-            self.db_connection.close()
+            try:
+                self.db_connection.close()
+            except:
+                pass

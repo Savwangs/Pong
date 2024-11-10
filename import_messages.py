@@ -4,7 +4,7 @@ from datetime import datetime
 import os
 
 def create_table():
-    """Create the messages table if it doesn't exist and clear existing data"""
+    """Create the messages table if it doesn't exist and check if it's empty"""
     conn = sqlite3.connect('messages.db')
     cursor = conn.cursor()
 
@@ -31,11 +31,20 @@ def create_table():
     );
     """)
     
-    # Clear existing data
-    cursor.execute("DELETE FROM messages")
+    # Only clear if the table is empty
+    cursor.execute("SELECT COUNT(*) FROM messages")
+    count = cursor.fetchone()[0]
+    
+    if count == 0:
+        print("Empty database detected, preparing for initial import...")
+    else:
+        print(f"Database already contains {count} messages, skipping initialization...")
+        conn.close()
+        return False
+        
     conn.commit()
     conn.close()
-    print("Database initialized and cleared")
+    return True
 
 def safe_get(row, key, default=None):
     """Safely get a value from the row with a default if the key doesn't exist"""
@@ -135,22 +144,28 @@ def import_messages(csv_file_path):
             if sample:
                 print("\nSample message:")
                 print(f"Chat: {sample[0]}")
-                print(f"Sender: {sample[1] or 'Savir'}")
+                print(f"Sender: {sample[1] or 'Unknown'}")
                 print(f"Content: {sample[2][:50]}...")
 
     except Exception as e:
         print(f"Error during import process: {str(e)}")
         conn.rollback()
     finally:
-        # Show current status of imported messages
-        try:
-            cursor.execute("SELECT chat_session, COUNT(*) FROM messages GROUP BY chat_session")
-            results = cursor.fetchall()
-            print("\nCurrent database status:")
-            for chat_session, count in results:
-                print(f"{chat_session}: {count} messages")
-        except:
-            pass
+        conn.close()
+
+def show_database_status():
+    """Show current status of imported messages"""
+    conn = sqlite3.connect('messages.db')
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT chat_session, COUNT(*) FROM messages GROUP BY chat_session")
+        results = cursor.fetchall()
+        print("\nCurrent database status:")
+        for chat_session, count in results:
+            print(f"{chat_session}: {count} messages")
+    except Exception as e:
+        print(f"Error getting database status: {str(e)}")
+    finally:
         conn.close()
 
 if __name__ == "__main__":
@@ -165,8 +180,13 @@ if __name__ == "__main__":
         'aryan_messages.csv'
     ]
     
-    create_table()  # Clear and initialize the database
-    for csv_file in csv_files:
-        csv_file_path = os.path.join(script_dir, csv_file)
-        print(f"\nImporting {csv_file}...")
-        import_messages(csv_file_path)
+    should_import = create_table()  # Only checks once if database is empty
+    if should_import:
+        for csv_file in csv_files:
+            csv_file_path = os.path.join(script_dir, csv_file)
+            print(f"\nImporting {csv_file}...")
+            import_messages(csv_file_path)
+        show_database_status()
+    else:
+        print("Database already contains data. No imports performed.")
+        show_database_status()
